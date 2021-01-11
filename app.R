@@ -5,7 +5,6 @@ library(reticulate)
 library(R.utils)
 library(leaflet)
 library(dplyr)
-library(pbapply)
 
 ### Python libraries to install before usage
 #py_install("fitparse", pip = TRUE)
@@ -82,7 +81,7 @@ ui <- fluidPage(
       ),
       radioButtons("timespan","Selet activities from", c("Last Month" = 1, "Last 6 months" = 2, "Last Year" = 3, "All Time" = 0)),
       tags$hr(),
-      fileInput("Import", "Choose your Strava Export", multiple = FALSE, accept = ".zip"),
+      fileInput("Import", "Choose your Strava export", multiple = FALSE, accept = ".zip"),
       tags$hr(),
       sliderInput("Height",
                   "Height in Pixels:",
