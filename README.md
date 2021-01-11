@@ -29,6 +29,7 @@ Both of the python packages can be installed using R, see lines 10 and 11 within
 
 * Within rstudio, open app.R and click `Run App` from the pulled directory
 * From R, call `shiny::runApp("ActivityMapper")`, pointing at the pulled directory
+* From https://cambaker.shinyapps.io/activitymapper/, but uptime is not guaranteed and upload is slow 
 
 ### Your First Run
 
