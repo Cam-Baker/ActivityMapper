@@ -5,6 +5,9 @@ library(reticulate)
 library(R.utils)
 library(leaflet)
 library(dplyr)
+library(pbapply)
+
+### Python libraries to install before usage
 #py_install("fitparse", pip = TRUE)
 #py_install("pytz", pip = TRUE)
 source_python("Python/fit_convert.py")
@@ -52,6 +55,7 @@ parseFIT <- function(file_path){
   return(data.frame(lat = as.numeric(as.character(fit_file$position_lat)), lng = as.numeric(as.character(fit_file$position_long))))
 }
 
+### Chooses a function to run based on the file extension
 parseFile <- function(file_path){
   if(grepl("fit",file_path)){
     return(parseFIT(file_path))
@@ -62,34 +66,58 @@ parseFile <- function(file_path){
   }
 }
 
-# Define UI for run mapper
+### Define UI for run mapper
 ui <- fluidPage(
   
-  # App header
-  headerPanel("Map your runs"),
+  ### App header
+  headerPanel("Map Your Activities"),
   
-  # Side bar for uploading data
+  ### Side bar for uploading data
   sidebarLayout(
     sidebarPanel(
-      
-      radioButtons("timespan","Selet activities from", c("All Time" = 0, "Last Month" = 1, "Last 6 months" = 2, "Last Year" = 3)),
+      tags$head(
+        tags$style(type="text/css", "select { max-width: 300px; }"),
+        tags$style(type="text/css", ".span4 { max-width: 300px; }"),
+        tags$style(type="text/css", ".well { max-width: 300px; }")
+      ),
+      radioButtons("timespan","Selet activities from", c("Last Month" = 1, "Last 6 months" = 2, "Last Year" = 3, "All Time" = 0)),
       tags$hr(),
-      fileInput("Import", "Choose your Strava Export", multiple = FALSE, accept = ".zip")
+      fileInput("Import", "Choose your Strava Export", multiple = FALSE, accept = ".zip"),
+      tags$hr(),
+      sliderInput("Height",
+                  "Height in Pixels:",
+                  min = 100,
+                  max = 2000,
+                  value = 500),
+      sliderInput("Width",
+                  "Width in Pixels:",
+                  min = 100,
+                  max = 2000,
+                  value = 500),
+      tags$hr()
+      
     ),
     
-    # Displaying contents of file
+    ### Displaying contents of file
     mainPanel(
-      leafletOutput("contents", height=1000)
+      uiOutput("leaf")
     )
   )
 )
 
 server <- function(input, output){
   
-  output$contents <- renderLeaflet({
+  output$leaf <- renderUI({
+    leafletOutput("map", width = input$Width, height = input$Height)
+  })
+  
+  output$map <- renderLeaflet({
     
+    ### Do not start until there is an upload
     req(input$timespan)
     req(input$Import)
+    
+    ### Unzip the directory
     tryCatch(
       {
         ### Create a temporary directory and unzip the payload to that directory
@@ -105,10 +133,12 @@ server <- function(input, output){
       }
     )
     
+    ### Read in and format the activity data table
     activity_df <- read.csv("activities.csv", stringsAsFactors = F)
     activity_df <- activity_df[which(grepl("activities",activity_df$Filename)),]
     activity_df <- activity_df %>% mutate(Activity.Date = as.Date(Activity.Date, format = '%B %d, %Y, %H:%M:%S'))
     
+    ### Filter activities based on user selected time frame
     if(input$timespan == "1"){
       activity_df <- activity_df[which(difftime(Sys.Date(),activity_df$Activity.Date) <= 31),]
     }else if(input$timespan == "2"){
@@ -116,24 +146,34 @@ server <- function(input, output){
     }else if(input$timespan == "3"){
       activity_df <- activity_df[which(difftime(Sys.Date(),activity_df$Activity.Date) <= 365),]
     }
-    out_df <- data.frame(matrix(nrow = 0,ncol = 2))
-    out <- pblapply(activity_df$Filename, parseFile)
     
+    ### Parse each of the gps files, returning as a table of coordinates
+    withProgress(message = "Processing activity files...", value=0, {
+      percentage <- 0
+      out <- lapply(activity_df$Filename, function(x){
+        percentage <<- percentage + 1/length(activity_df$Filename)*100
+        incProgress(1/length(activity_df$Filename), detail = paste0("Progress: ",round(percentage,1)))
+        parseFile(x)
+      })
+    })
+    
+    ### Create the map from the lists of coordinates
     map <- leaflet() %>% addTiles() 
     for(i in out){
-      print(i)
-      print(is.null(i))
       if(!is.null(i)){
         if(isTruthy(i) && nrow(i) > 0){
           map <- map %>% addPolylines(lat = i$lat, lng = i$lng)
         }
       }
     }
-  ### Delete the temporary directory
+    
+    ### Delete the temporary directory
     setwd("..")
     unlink(tmp_dir, recursive = T)
+    
     return(map)
   })
+
 }
 
 shinyApp(ui, server)
