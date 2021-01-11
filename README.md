@@ -34,6 +34,10 @@ Both of the python packages can be installed using R, see lines 10 and 11 within
 
 Before you can fully use the app, you will need to request your data from Strava. There are instructions on how to do this in the "Bulk Data" section of [Strava's support site](https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export). You will recieve a zip file that you will upload to the app directly. **The app deletes your data after the map is generated**.
 
+## TODO
+
+The most glaring feature that's missing is a way to download your map. You'll have to use screenshots for the time being.
+
 ## Acknowledgements
 
 [GPSskyrunners](https://github.com/ssayols/GPSskyrunners) served as an inspiration for the first interation. This [guide](http://rcrastinate.blogspot.com/2014/09/stay-on-track-plotting-gps-tracks-with-r.html) served as a tutorial for parsing GPX files and this [guide](https://maxcandocia.com/article/2017/Sep/22/converting-garmin-fit-to-csv/) was used to convert Garmin fit files to their GPS coordinates.
