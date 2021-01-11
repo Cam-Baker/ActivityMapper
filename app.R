@@ -7,8 +7,9 @@ library(leaflet)
 library(dplyr)
 
 ### Python libraries to install before usage
-#py_install("fitparse", pip = TRUE)
-#py_install("pytz", pip = TRUE)
+virtualenv_create(envname = "python_environment", python= "python3")
+virtualenv_install("python_environment", c('fitparse', 'pytz'))
+reticulate::use_virtualenv("python_environment", required = TRUE)
 source_python("Python/fit_convert.py")
 
 ### Set maximum upload size to 50 MB
@@ -79,6 +80,10 @@ ui <- fluidPage(
         tags$style(type="text/css", ".span4 { max-width: 300px; }"),
         tags$style(type="text/css", ".well { max-width: 300px; }")
       ),
+      h5("This app requires your Strava data export (zip). See the instructions below for how to get this."),
+      tags$a(href="https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export","Strave export instructions"),
+      h5("Uploading the zip file may take a couple minutes."),
+      tags$hr(),
       radioButtons("timespan","Selet activities from", c("Last Month" = 1, "Last 6 months" = 2, "Last Year" = 3, "All Time" = 0)),
       tags$hr(),
       fileInput("Import", "Choose your Strava export", multiple = FALSE, accept = ".zip"),
@@ -93,7 +98,8 @@ ui <- fluidPage(
                   min = 100,
                   max = 2000,
                   value = 500),
-      tags$hr()
+      tags$hr(),
+      tags$a(href="https://github.com/Cam-Baker/ActivityMapper","For more information, see the github")
       
     ),
     

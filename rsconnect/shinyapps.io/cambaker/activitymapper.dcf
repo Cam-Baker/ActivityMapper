@@ -1,0 +1,12 @@
+name: activitymapper
+title:
+username:
+account: cambaker
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3461497
+bundleId: 4082799
+url: https://cambaker.shinyapps.io/activitymapper/
+when: 1610383901.64296
+asMultiple: FALSE
+asStatic: FALSE
